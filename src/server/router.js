@@ -1,25 +1,9 @@
-var express = require('express');
-var mime = require('mime');
-var r = module.exports = express.Router();
-//var _ = require('lodash');
-var logger = require('winston')
-//var Promise = require('bluebird');
-var URI = require('uri-js')
-var fs = require('fs')
-
-if (!process.env.SERVER_NAME) {
-  process.env.SERVER_NAME = "http://localhost:3000/"
-  logger.warn("no SERVER_NAME set. defaulting to "+process.env.SERVER_NAME)
-}
-
-var FQDN = URI.parse(process.env.SERVER_NAME)
-if (!FQDN) {
-  throw new Error("SERVER_NAME is not valid")
-}
-
-var filePath = function (path, options) {
-  return require('path').join(__dirname, '../..', path)
-}
+var mime = require('mime')
+  , logger = require('winston')
+  , URI = require('uri-js')
+  , fs = require('fs')
+  , FQDN = null
+  , storage = null
 
 var actions = {
   /*
@@ -34,23 +18,27 @@ var actions = {
    */
   upload: function (req, res, next) {
     var file = req.files.userfile
-    var oldPath = filePath(file.path)
+    var oldPath = file.path
     var nameParts = file.originalname.split('.')
     var ext = nameParts[nameParts.length-1]
     var path = oldPath+'.'+ext;
+    console.info("renaming "+oldPath+" to "+path);
     fs.rename(oldPath, path, function(err) {
-      if (err) res.status(500).send(err);
-      console.info("renamed "+oldPath+" to "+path);
-      res.status(201).send(URI.serialize({
-        scheme: FQDN.scheme,
-        host: FQDN.host,
-        port: FQDN.port,
-        path: '/uploads/'+require('path').basename(path)
-      }))
+      if (err) {
+        console.error(err);
+        res.status(500).send(err);
+      } else {
+        res.status(201).send(URI.serialize({
+          scheme: FQDN.scheme,
+          host: FQDN.host,
+          port: FQDN.port,
+          path: require('path').basename(path)
+        }))
+      }
     });
   },
   download: function (req, res, next) {
-    var path = filePath(req.path)
+    var path = require('path').join(storage, req.params.name);
     fs.exists(path, function (yes) {
       if (yes) {
         res.set('Content-Type', mime.lookup(path))
@@ -81,21 +69,33 @@ var actions = {
   }
 }
 
+module.exports = function (options) {
+  var r = require('express').Router()
+    , user = options.username
+    , pass = options.password
 
+  storage = options.storage
+  FQDN = URI.parse(options.serverName);
+  if (!FQDN) throw new Error("SERVER_NAME is not valid");
+  if (!user) logger.warn("no DEWDROP_USER set");
+  if (!pass) logger.warn("no DEWDROP_PASS set");
+  if (!user && !pass) logger.warn('everyone is authorized!');
+  else logger.warn("hey! make sure you're using SSL!");
 
-var user = process.env.DEWDROP_USER;
-var pass = process.env.DEWDROP_PASS;
-if (!user) logger.warn("no DEWDROP_USER set")
-if (!pass) logger.warn("no DEWDROP_PASS set")
-if (!user && !pass) logger.warn('everyone is authorized!')
-else logger.warn("hey! make sure you're using SSL!")
-function authorize(req, res, next) {
-  var ok = req.body.username === user && req.body.password === pass
-  if (ok) next()
-  else res.status(401).end()
+  function authorize(req, res, next) {
+    var ok = req.body.username === user && req.body.password === pass
+    if (ok) next()
+      else res.status(401).end();
+  };
+
+  function act(req, res, next) {
+    actions[req.query.action](req, res, next);
+  };
+
+  r.route('/').all(authorize).post(act)
+
+  r.route('/uploads/:name').get(actions.download)
+
+  r.route('/:name').get(actions.download)
+  return r;
 }
-function act(req, res, next) {
-  actions[req.query.action](req, res, next)
-}
-r.route('/').all(authorize).post(act)
-r.route('/uploads/*').get(actions.download)
