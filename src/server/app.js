@@ -1,11 +1,12 @@
-var logger = require('winston'),
-express = require('express'),
-app = express(),
-http = require('http').Server(app),
+var logger = require('winston')
+  , multer  = require('multer')
+  , express = require('express')
+  , app = express()
+  , http = require('http').Server(app)
+  , bodyParser = require('body-parser')
+
 //io = require('socket.io')(http),
 //browserify = require('browserify-middleware'),
-bodyParser = require('body-parser');
-
 logger.remove(logger.transports.Console);
 logger.add(logger.transports.Console, { colorize: true });
 
@@ -42,7 +43,8 @@ var allowCrossDomain = function(req, res, next) {
 };
 
 app.use(allowCrossDomain);
-app.use(bodyParser.json({limit: '100mb'}));
+app.use(multer({ dest: './uploads/'}))
+app.use(bodyParser.json({limit: '10mb'}));
 app.use(require('./router'));
 
 //var mongoose = require('mongoose');
