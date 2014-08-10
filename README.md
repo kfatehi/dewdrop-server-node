@@ -22,3 +22,5 @@ docker run --name dewdrop-server \
   -p 44444:3000 
   dewdrop-server-node
 ```
+
+note: this is unrelated to https://github.com/keyvanfatehi/dew
