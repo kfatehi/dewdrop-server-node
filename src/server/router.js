@@ -1,4 +1,5 @@
 var express = require('express');
+var mime = require('mime');
 var r = module.exports = express.Router();
 //var _ = require('lodash');
 var logger = require('winston')
@@ -16,6 +17,10 @@ if (!FQDN) {
   throw new Error("SERVER_NAME is not valid")
 }
 
+var filePath = function (path, options) {
+  return require('path').join(__dirname, '../..', path)
+}
+
 var actions = {
   /*
    * ?action=verify POST username=[YOUR USERNAME] password=[YOUR PASSWORD] // returns JSON, you can check data.success
@@ -28,20 +33,27 @@ var actions = {
    * i dont want json in my clipboard... looks like we need to send just a string back
    */
   upload: function (req, res, next) {
-    res.status(201).send(function (file) {
-      console.log(file)
-      return URI.serialize({
+    var file = req.files.userfile
+    var oldPath = filePath(file.path)
+    var nameParts = file.originalname.split('.')
+    var ext = nameParts[nameParts.length-1]
+    var path = oldPath+'.'+ext;
+    fs.rename(oldPath, path, function(err) {
+      if (err) res.status(500).send(err);
+      console.info("renamed "+oldPath+" to "+path);
+      res.status(201).send(URI.serialize({
         scheme: FQDN.scheme,
         host: FQDN.host,
         port: FQDN.port,
-        path: file.path
-      }) 
-    }(req.files.userfile))
+        path: '/uploads/'+require('path').basename(path)
+      }))
+    });
   },
   download: function (req, res, next) {
-    var path = require('path').join(__dirname, '../..', req.path);
+    var path = filePath(req.path)
     fs.exists(path, function (yes) {
       if (yes) {
+        res.set('Content-Type', mime.lookup(path))
         fs.createReadStream(path).pipe(res)
       } else res.status(404).end()
     })
