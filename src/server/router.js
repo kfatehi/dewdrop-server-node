@@ -3,6 +3,18 @@ var r = module.exports = express.Router();
 //var _ = require('lodash');
 var logger = require('winston')
 //var Promise = require('bluebird');
+var URI = require('uri-js')
+var fs = require('fs')
+
+if (!process.env.SERVER_NAME) {
+  process.env.SERVER_NAME = "http://localhost:3000/"
+  logger.warn("no SERVER_NAME set. defaulting to "+process.env.SERVER_NAME)
+}
+
+var FQDN = URI.parse(process.env.SERVER_NAME)
+if (!FQDN) {
+  throw new Error("SERVER_NAME is not valid")
+}
 
 var actions = {
   /*
@@ -13,9 +25,26 @@ var actions = {
   },
   /*
    * ?action=upload POST username=[USERNAME] password=[PASSWORD] filenames=FILENAME file file should be called "userfile" // returns data.success for whether it succeeded or not, and data.message for the URL or error message
+   * i dont want json in my clipboard... looks like we need to send just a string back
    */
   upload: function (req, res, next) {
-    res.status(501).end()
+    res.status(201).send(function (file) {
+      console.log(file)
+      return URI.serialize({
+        scheme: FQDN.scheme,
+        host: FQDN.host,
+        port: FQDN.port,
+        path: file.path
+      }) 
+    }(req.files.userfile))
+  },
+  download: function (req, res, next) {
+    var path = require('path').join(__dirname, '../..', req.path);
+    fs.exists(path, function (yes) {
+      if (yes) {
+        fs.createReadStream(path).pipe(res)
+      } else res.status(404).end()
+    })
   },
   /*
    * ?action=browse POST username=[USERNAME] password=[PASSWORD] // returns data.success for true/false, files as an array of: filename, extension, size
@@ -42,7 +71,6 @@ var actions = {
 
 
 
-
 var user = process.env.DEWDROP_USER;
 var pass = process.env.DEWDROP_PASS;
 if (!user) logger.warn("no DEWDROP_USER set")
@@ -57,4 +85,5 @@ function authorize(req, res, next) {
 function act(req, res, next) {
   actions[req.query.action](req, res, next)
 }
-r.route('/').post(authorize, act)
+r.route('/').all(authorize).post(act)
+r.route('/uploads/*').get(actions.download)

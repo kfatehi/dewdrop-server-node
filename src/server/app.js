@@ -15,14 +15,11 @@ try {
   dotenv.load();
 } catch (e) {}
 
-//app.use('/js/bundle.js', browserify(__dirname+'/../client/app.js'));
-app.use(express.static(__dirname + '/../../public'));
-
 if (process.env.NODE_ENV === "development") {
   logger.info('development mode');
 
   app.use(function (req, res, next) {
-    logger.info(req.method + " " + req.path);
+    logger.info(req.method, req.path, 'action='+req.query.action);
     next();
   });
 
