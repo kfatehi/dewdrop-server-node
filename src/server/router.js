@@ -2,7 +2,6 @@ var express = require('express');
 var r = module.exports = express.Router();
 //var _ = require('lodash');
 var logger = require('winston')
-  , log = logger.info
 //var Promise = require('bluebird');
 
 var user = process.env.DEWDROP_USER;
@@ -23,13 +22,15 @@ function act(req, res, next) {
   actions[req.query.action](req, res, next)
 }
 
-/*
- * ?action=verify POST username=[YOUR USERNAME] password=[YOUR PASSWORD] // returns JSON, you can check data.success
- */
 var actions = {
+  /*
+   * ?action=verify POST username=[YOUR USERNAME] password=[YOUR PASSWORD] // returns JSON, you can check data.success
+   */
   verify: function (req, res, next) {
+    res.status(200).send({success: {}})
     next()
-  }
+  },
+
 }
 
 r.route('/').post(authorize, act)
