@@ -27,18 +27,20 @@ var actions = {
    * ?action=verify POST username=[YOUR USERNAME] password=[YOUR PASSWORD] // returns JSON, you can check data.success
    */
   verify: function (req, res, next) {
-    res.status(200).send({success: {}})
-    next()
+    res.status(200).send({success: true})
   },
-
+  /*
+   * ?action=upload POST username=[USERNAME] password=[PASSWORD] filenames=FILENAME file file should be called "userfile" // returns data.success for whether it succeeded or not, and data.message for the URL or error message
+   */
+  upload: function (req, res, next) {
+    res.status(501).end()
+  }
 }
 
 r.route('/').post(authorize, act)
 
 
 /*
- * ?action=upload POST username=[USERNAME] password=[PASSWORD] filenames=FILENAME file file should be called "userfile" // returns data.success for whether it succeeded or not, and data.message for the URL or error message
- *
  * ?action=browse POST username=[USERNAME] password=[PASSWORD] // returns data.success for true/false, files as an array of: filename, extension, size
  *
  * ?action=get-last-uploaded-file POST username=[USERNAME] password=[PASSWORD] // returns data.success for true/false, file with properties: filename, extension, size
