@@ -1,0 +1,24 @@
+{
+  "name": "dewdrop-server-node",
+  "version": "1.0.0",
+  "description": "dewdrop-server-node ===================",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/keyvanfatehi/dewdrop-server-node.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/keyvanfatehi/dewdrop-server-node/issues"
+  },
+  "homepage": "https://github.com/keyvanfatehi/dewdrop-server-node",
+  "dependencies": {
+    "body-parser": "^1.6.2",
+    "express": "^4.8.2",
+    "winston": "^0.7.3"
+  }
+}
