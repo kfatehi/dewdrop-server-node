@@ -23,4 +23,4 @@ docker run --name dewdrop-server \
   dewdrop-server-node
 ```
 
-note: this is unrelated to https://github.com/keyvanfatehi/dew
+note: `dewdrop` is unrelated to my other project, [dew](https://github.com/keyvanfatehi/dew)
