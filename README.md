@@ -9,18 +9,18 @@ Get the clients here http://dewdrop.dangelov.com/ or if you're on Mac OS X, you 
 
 ## Deploy with Docker
 
-Pull the image `docker pull dewdrop-server-node`
+Pull the image `docker pull keyvanfatehi/dewdrop-server-node`
 
 Create and run the container
 
 ```
-docker run --name dewdrop-server \
+docker run -d --name dewdrop-server \
   -e SERVER_NAME="http://foo.bar.baz" \
   -e DEWDROP_USER="you" \
   -e DEWDROP_PASS="secret" \
   -v /where/to/store/data:/data \
-  -p 44444:3000 
-  dewdrop-server-node
+  -p 44444:3000 \
+  keyvanfatehi/dewdrop-server-node
 ```
 
 note: `dewdrop` is unrelated to my other project, [dew](https://github.com/keyvanfatehi/dew)
